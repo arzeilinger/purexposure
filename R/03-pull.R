@@ -54,10 +54,15 @@ pull_raw_pur <- function(years = "all", counties = "all", verbose = TRUE,
                          quiet = FALSE) {
 
   suppressMessages(
-    st <- RCurl::getURL("ftp://transfer.cdpr.ca.gov/pub/outgoing/pur_archives/",
+    # st <- RCurl::getURL("ftp://transfer.cdpr.ca.gov/pub/outgoing/pur_archives/",
+    #                     verbose = T,
+    #                     ftp.use.epsv = T,
+    #                     dirlistonly = T)
+    st <- RCurl::getURL("https://files.cdpr.ca.gov/pub/outgoing/pur_archives/",
                         verbose = T,
                         ftp.use.epsv = T,
                         dirlistonly = T)
+
   )
 
   most_recent_year <- as.integer(stringr::str_sub(st, nchar(st)-9, nchar(st)-6))
