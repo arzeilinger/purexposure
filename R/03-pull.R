@@ -60,21 +60,31 @@ pull_raw_pur <- function(years = "all", counties = "all", verbose = TRUE,
     #                     dirlistonly = T)
     st <- RCurl::getURL("https://files.cdpr.ca.gov/pub/outgoing/pur_archives/",
                         verbose = T,
-                        ftp.use.epsv = T,
+                        ftp.use.epsv = F,
                         dirlistonly = T)
+
 
   )
 
-  most_recent_year <- as.integer(stringr::str_sub(st, nchar(st)-9, nchar(st)-6))
+  ## NOTES:
+  ## As of 2025, PUR data is provided as a zip file for each year going back to 1974.
+  ## From 1970 - 1973, these are made available as PDF microfiches in a single zip file.
+  ## First get a list of zip files one for each year, excluding the microfiches.
+  ## Then extract the years from the file names, and get the most recent year.
+
+  yearsAvailable <- str_extract_all(st, "pur\\d{4}\\.zip") %>% unlist() %>%
+    str_extract(., "\\d{4}") %>% as.numeric()
+
+  most_recent_year <- max(yearsAvailable)
 
   if ("all" %in% tolower(years)) {
-    years <- 1990:most_recent_year
+    years <- yearsAvailable
   }
   if (!all(is.numeric(years))) {
     stop("Years should be four-digit numeric values.")
   }
-  if (all(is.numeric(years)) & (min(years) < 1990 | max(years) > most_recent_year)) {
-    stop(paste0("Years should be between 1990 and ", most_recent_year, "."))
+  if (all(is.numeric(years)) & (min(years) < 1974 | max(years) > most_recent_year)) {
+    stop(paste0("Years should be between 1974 and ", most_recent_year, "; years 1970-1973 available as microfiches PDFs."))
   }
 
   code_df <- purexposure::county_codes
@@ -132,13 +142,18 @@ pull_raw_pur <- function(years = "all", counties = "all", verbose = TRUE,
 
   if (!"all" %in% counties) {
 
-    raw_df <- purrr::map_dfr(years, help_pull_pur, counties = counties,
-                             quiet = quiet)
+    # raw_df <- purrr::map_dfr(years, help_pull_pur, counties = counties,
+    #                          quiet = quiet)
+    raw_df <- purrr::map(years, help_pull_pur, counties = counties,
+                         quiet = quiet) %>% purrr::list_rbind()
+
 
   } else {
 
-    raw_df <- purrr::map_dfr(years, help_pull_pur, counties = "all",
-                             quiet = quiet)
+    # raw_df <- purrr::map_dfr(years, help_pull_pur, counties = "all",
+    #                          quiet = quiet)
+    raw_df <- purrr::map(years, help_pull_pur, counties = "all",
+                         quiet = quiet) %>% purrr::list_rbind()
 
   }
 

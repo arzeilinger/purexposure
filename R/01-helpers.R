@@ -1,10 +1,15 @@
 #' @importFrom magrittr %>%
 help_pull_pur <- function(year, counties = "all", quiet = FALSE) {
 
+  ## TODO:
+  ## Check if a year's zip file is already in the local tempdir and if so, skip downloading it again
+  ## May want an option "always_download" to by-pass this and always download a fresh version.
+  ## Add this at utils::download.file() line
+
   current_dir <- getwd()
-  url <- paste0("ftp://transfer.cdpr.ca.gov/pub/outgoing/pur_archives/pur",
-                year, ".zip")
   file <- paste0("pur", year, ".zip")
+  url <- paste0("https://files.cdpr.ca.gov/pub/outgoing/pur_archives/",
+                file)
 
   if (!"all" %in% counties) {
     codes <- find_counties(counties)
