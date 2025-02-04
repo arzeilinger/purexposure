@@ -306,8 +306,10 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
     county_shp <- args$spdf
   }
 
-  county_bbox <- as.data.frame(county_shp@bbox)
-  county_df <- spdf_to_df(county_shp)
+  #county_bbox <- as.data.frame(county_shp@bbox)
+  county_bbox <- as.data.frame(st_bbox(county_shp))
+  #county_df <- spdf_to_df(county_shp)
+  county_df <- county_shp
 
   if (chemicals == "all") {
 
@@ -385,17 +387,20 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
   }
 
   colnames(pur_df3)[1] <- "pls"
-  pur_spatial <- pur_df3 %>% dplyr::left_join(county_df, by = "pls")
+  pur_spatial <- pur_df3 %>% dplyr::left_join(county_df, by = "pls") %>%
+    st_as_sf()
 
-  long_range <- grDevices::extendrange(county_df$long)
-  lat_range <- grDevices::extendrange(county_df$lat)
+  long_range <- grDevices::extendrange(county_df$DDLONG)
+  lat_range <- grDevices::extendrange(county_df$DDLAT)
 
-  if (ggmap_background) {
-    suppressMessages(suppressWarnings(
-      location <- ggmap::get_map(c(floor(county_bbox$min[1]), floor(county_bbox$min[2]),
-                                   ceiling(county_bbox$max[1]), ceiling(county_bbox$max[2])),
-                                 color = "bw")))
-  }
+  # if (ggmap_background) {
+  #   suppressMessages(suppressWarnings(
+  #     ## bbox coordinates are in order: xmin, ymin, xmax, ymax
+  #     location <- ggmap::get_map(c(floor(county_bbox$x[1]), floor(county_bbox$x[2]),
+  #                                  ceiling(county_bbox$x[3]), ceiling(county_bbox$x[4])),
+  #                                color = "bw",
+  #                                source = "stadia")))
+  # }
 
   legend_label <- paste0("Applied Pesticides\n(kg/", section_township, ")")
 
@@ -410,19 +415,27 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
   gradient <- colormap::colormap(fill, nshades = 1000, alpha = alpha)
   # gradient <- c("#FFFFFF", gradient)
 
-  if (ggmap_background) {
-    plot <- ggmap::ggmap(location)
-  } else {
-    plot <- ggplot2::ggplot()
-  }
+  # if (ggmap_background) {
+  #   plot <- ggmap::ggmap(location)
+  # } else {
+  #   plot <- ggplot2::ggplot()
+  # }
 
-  plot <- plot  +
-    ggplot2::geom_polygon(data = county_df, ggplot2::aes(x = long, y = lat, group = group),
-                          color = polygon_color, fill = NA, size = polygon_size) +
-    ggplot2::geom_polygon(data = pur_spatial, ggplot2::aes_string(x = "long", y = "lat", ## aes_string
-                                                                  group = "group",
-                                                                  fill = fill_var),
-                          color = polygon_color, size = polygon_size)
+  cal_map <- st_as_sf(maps::map("county", region = "california", fill=TRUE, plot =FALSE))
+
+#  plot <- plot  +
+  plot <- ggplot(data = cal_map) +
+    geom_sf(fill = "white") +
+    coord_sf(xlim = c(floor(county_bbox$x[1]), ceiling(county_bbox$x[3])),
+             ylim = c(floor(county_bbox$x[2]), ceiling(county_bbox$x[4]))) +
+    geom_sf(data = county_df, color = polygon_color) +
+    geom_sf(data = pur_spatial, aes_string(fill = fill_var))
+    # ggplot2::geom_polygon(data = county_df, ggplot2::aes(x = DDLONG, y = DDLAT, group = group),
+    #                       color = polygon_color, fill = NA, size = polygon_size) #+
+    # ggplot2::geom_polygon(data = pur_spatial, ggplot2::aes_string(x = "long", y = "lat", ## aes_string
+    #                                                               group = "group",
+    #                                                               fill = fill_var),
+    #                       color = polygon_color, size = polygon_size)
 
   if (color_by == "amount") {
 
@@ -460,12 +473,12 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
 
   plot <- plot +
     ggplot2::theme_void() +
-    ggplot2::coord_map(xlim = long_range, ylim = lat_range)
+    ggplot2::coord_sf(xlim = long_range, ylim = lat_range)
 
   if (crop) {
     long_range <- grDevices::extendrange(pur_spatial$long)
     lat_range <- grDevices::extendrange(pur_spatial$lat)
-    plot <- plot + ggplot2::coord_map(xlim = long_range, ylim = lat_range)
+    plot <- plot + coord_sf(xlim = long_range, ylim = lat_range)
   }
 
   if (color_by == "percentile") {

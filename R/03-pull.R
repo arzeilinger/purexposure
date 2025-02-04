@@ -672,15 +672,18 @@ pull_spdf <- function(county, section_township = "section",
     county_name_underscore <- stringr::str_replace(county_name, " ", "_")
 
     if (county_name == "Los Angeles") {
-      shp_url <- paste0("ftp://transfer.cdpr.ca.gov/pub/outgoing/grndwtr/",
+      shp_url <- paste0("https://files.cdpr.ca.gov/pub/outgoing/grndwtr/",
                         "Los_Angeles/LosAngeles_", section_township, "s.zip")
       file <- paste0("LosAngeles_", section_township, "s.zip")
     } else if (county_name == "San Luis Obispo") {
-      shp_url <- paste0("ftp://transfer.cdpr.ca.gov/pub/outgoing/grndwtr/",
+      shp_url <- paste0("https://files.cdpr.ca.gov/pub/outgoing/grndwtr/",
                         county_name_underscore, "/SLO_", section_township, "s.zip")
       file <- paste0("SLO_", section_township, "s.zip")
     } else {
-      shp_url <- paste0("ftp://transfer.cdpr.ca.gov/pub/outgoing/grndwtr/",
+      # shp_url <- paste0("ftp://transfer.cdpr.ca.gov/pub/outgoing/grndwtr/",
+      #                   county_name_underscore, "/", county_name_underscore, "_",
+      #                   section_township, "s.zip")
+      shp_url <- paste0("https://files.cdpr.ca.gov/pub/outgoing/grndwtr/",
                         county_name_underscore, "/", county_name_underscore, "_",
                         section_township, "s.zip")
       file <- paste0(county_name_underscore, "_", section_township, "s.zip")
@@ -736,10 +739,14 @@ pull_spdf <- function(county, section_township = "section",
 
       shp_file <- list.files()[grepl(".shp", list.files()) &
                                  !grepl(".xml", list.files())]
-      shp <- rgdal::readOGR(shp_file,
-                            layer = basename(strsplit(shp_file, "\\.")[[1]])[1],
-                            verbose = FALSE)
-      shp <- sp::spTransform(shp, sp::CRS("+init=epsg:4326"))
+      # shp <- rgdal::readOGR(shp_file,
+      #                       layer = basename(strsplit(shp_file, "\\.")[[1]])[1],
+      #                       verbose = FALSE)
+      # shp <- sp::spTransform(shp, sp::CRS("+init=epsg:4326"))
+      shp <- sf::st_read(shp_file,
+                         layer = basename(strsplit(shp_file, "\\.")[[1]])[1])
+      shp <- sf::st_transform(shp, crs = st_crs(4326))
+
 
       suppressWarnings(suppressMessages(
         purexposure_package_env$pur_lst[[paste0(county_name_underscore,
