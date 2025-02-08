@@ -19,6 +19,7 @@ Imports:
     stringr (>= 1.2.0),
     lubridate (>= 1.6.0),
     sp (>= 1.2.5),
+    sf (>= 1.0),
     broom (>= 0.4.2),
     ggplot2 (>= 2.2),
     ggmap (>= 2.6.1),

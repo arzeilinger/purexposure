@@ -307,7 +307,7 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
   }
 
   #county_bbox <- as.data.frame(county_shp@bbox)
-  county_bbox <- as.data.frame(st_bbox(county_shp))
+  county_bbox <- as.data.frame(sf::st_bbox(county_shp))
   #county_df <- spdf_to_df(county_shp)
   county_df <- county_shp
 
@@ -388,7 +388,7 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
 
   colnames(pur_df3)[1] <- "pls"
   pur_spatial <- pur_df3 %>% dplyr::left_join(county_df, by = "pls") %>%
-    st_as_sf()
+    sf::st_as_sf()
 
   long_range <- grDevices::extendrange(county_df$DDLONG)
   lat_range <- grDevices::extendrange(county_df$DDLAT)
@@ -421,7 +421,7 @@ plot_county_application <- function(clean_pur_df, county = NULL, pls = NULL,
   #   plot <- ggplot2::ggplot()
   # }
 
-  cal_map <- st_as_sf(maps::map("county", region = "california", fill=TRUE, plot =FALSE))
+  cal_map <- sf::st_as_sf(maps::map("county", region = "california", fill=TRUE, plot =FALSE))
 
 #  plot <- plot  +
   plot <- ggplot(data = cal_map) +

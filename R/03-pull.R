@@ -745,7 +745,7 @@ pull_spdf <- function(county, section_township = "section",
       # shp <- sp::spTransform(shp, sp::CRS("+init=epsg:4326"))
       shp <- sf::st_read(shp_file,
                          layer = basename(strsplit(shp_file, "\\.")[[1]])[1])
-      shp <- sf::st_transform(shp, crs = st_crs(4326))
+      shp <- sf::st_transform(shp, crs = sf::st_crs(4326))
 
 
       suppressWarnings(suppressMessages(
